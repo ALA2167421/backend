@@ -1,0 +1,32 @@
+{
+  "name": "my-new-tools",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@prisma/client": "^5.22.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/multer": "^2.0.0",
+    "@types/uuid": "^10.0.0",
+    "dotenv": "^17.2.3",
+    "prisma": "^5.22.0",
+    "tsx": "^4.21.0"
+  },
+  "dependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "js-yaml": "^4.1.1",
+    "multer": "^2.0.2",
+    "uuid": "^13.0.0"
+  }
+}

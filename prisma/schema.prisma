@@ -1,0 +1,1000 @@
+generator client {
+  provider = "prisma-client-js"
+  // لا تضع output، دعه ينزل في المكان الافتراضي node_modules
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model assessments {
+  id              Int       @id @default(autoincrement())
+  uuid            String    @unique(map: "uuid") @db.VarChar(100)
+  exuid           String    @db.VarChar(100)
+  project_id      Int
+  min_grade_id    Int?
+  max_grade_id    Int?
+  standard_id     Int?
+  assessment_type String?   @db.VarChar(100)
+  question        String?   @db.MediumText
+  answers         String?   @db.MediumText
+  correct_answer  String?   @db.MediumText
+  feedbacks       String?   @db.MediumText
+  created_at      DateTime? @db.DateTime(0)
+  updated_at      DateTime? @db.DateTime(0)
+  created_by      Int?
+  updated_by      Int?
+
+  @@unique([project_id, exuid], map: "exuid")
+  @@index([max_grade_id], map: "max_grade_id")
+  @@index([min_grade_id], map: "min_grade_id")
+  @@index([project_id], map: "project_id")
+  @@index([standard_id], map: "standard_id")
+}
+
+model asset_versions {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique(map: "uuid") @db.VarChar(100)
+  asset_id    Int
+  file_id     Int?
+  url         String?   @db.VarChar(1024)
+  number      Int
+  author_id   Int
+  source_id   Int
+  source_code String?   @db.VarChar(255)
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  created_by  Int?
+  updated_by  Int?
+
+  @@index([asset_id], map: "asset_id")
+  @@index([author_id], map: "author_id")
+  @@index([file_id], map: "file_id")
+  @@index([source_id], map: "source_id")
+}
+
+model assets {
+  id              Int       @id @default(autoincrement())
+  uuid            String    @unique(map: "uuid") @db.VarChar(100)
+  exuid           String?   @db.VarChar(100)
+  name            String    @db.VarChar(100)
+  description     String?   @db.VarChar(1000)
+  type_id         Int
+  status_id       Int
+  media_type      String?   @db.VarChar(3)
+  preload         Boolean   @default(false)
+  created_at      DateTime? @db.DateTime(0)
+  updated_at      DateTime? @db.DateTime(0)
+  created_by      Int?
+  updated_by      Int?
+  source_asset_id Int?
+
+  @@index([exuid], map: "exuid")
+  @@index([source_asset_id], map: "index_assets_on_source_asset_id")
+  @@index([status_id], map: "status_id")
+  @@index([type_id], map: "type_id")
+}
+
+model assets_sequence {
+  id Int @id // ���� @id ���
+}
+
+model components {
+  id                     Int       @id @default(autoincrement())
+  name                   String    @db.VarChar(100)
+  description            String?   @db.VarChar(1000)
+  component_type         String    @db.VarChar(20)
+  alias                  String    @unique(map: "alias") @db.VarChar(100)
+  layered                Boolean   @default(false)
+  tracked                Boolean   @default(false)
+  color                  String?   @db.VarChar(10)
+  created_at             DateTime? @db.DateTime(0)
+  updated_at             DateTime? @db.DateTime(0)
+  created_by             Int?
+  updated_by             Int?
+  active                 Boolean   @default(true)
+  configuration_provider String?   @db.VarChar(100)
+  tts                    Boolean   @default(true)
+  protected_properties   String?   @db.VarChar(200)
+  include_in             String?   @default("") @db.VarChar(255)
+  exclude_from           String?   @default("") @db.VarChar(255)
+}
+
+model document_versions {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique(map: "uuid") @db.VarChar(100)
+  document_id Int
+  file_id     Int
+  number      Int       @default(0)
+  author_id   Int
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  created_by  Int?
+  updated_by  Int?
+
+  @@index([author_id], map: "author_id")
+  @@index([document_id], map: "document_id")
+  @@index([file_id], map: "file_id")
+}
+
+model documents {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique(map: "uuid") @db.VarChar(100)
+  name        String    @db.VarChar(100)
+  description String?   @db.VarChar(1000)
+  type_id     Int
+  status_id   Int
+  category_id Int
+  author_id   Int
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  created_by  Int?
+  updated_by  Int?
+
+  @@index([author_id], map: "author_id")
+  @@index([category_id], map: "category_id")
+  @@index([status_id], map: "status_id")
+  @@index([type_id], map: "type_id")
+}
+
+model files {
+  id           Int       @id @default(autoincrement())
+  uuid         String    @unique(map: "uuid") @db.VarChar(100)
+  name         String    @db.VarChar(100)
+  description  String?   @db.VarChar(1000)
+  version      Int       @default(0)
+  content_type String    @db.VarChar(100)
+  size         Decimal   @default(0) @db.Decimal(10, 0)
+  path         String?   @db.VarChar(1000)
+  handler      String    @db.VarChar(20)
+  action       String    @db.VarChar(20)
+  author_id    Int
+  created_at   DateTime? @db.DateTime(0)
+  updated_at   DateTime? @db.DateTime(0)
+  created_by   Int?
+  updated_by   Int?
+
+  @@index([author_id], map: "author_id")
+}
+
+model fix_si {
+  id        Int  @id @default(0) // ���� @id ���
+  screen_id Int?
+}
+
+model issue_comments {
+  id         Int       @id @default(autoincrement())
+  uuid       String    @unique(map: "uuid") @db.VarChar(100)
+  text       String    @db.VarChar(1000)
+  issue_id   Int
+  author_id  Int
+  created_at DateTime? @db.DateTime(0)
+  updated_at DateTime? @db.DateTime(0)
+  created_by Int?
+  updated_by Int?
+  exuid      String?   @unique(map: "exuid") @db.VarChar(100)
+
+  @@index([author_id], map: "author_id")
+  @@index([issue_id], map: "issue_id")
+}
+
+model issues {
+  id                 Int       @id @default(autoincrement())
+  uuid               String    @unique(map: "uuid") @db.VarChar(100)
+  text               String    @db.VarChar(255)
+  lesson_id          Int
+  learning_object_id Int?
+  screen_id          Int?
+  screen_item_id     Int?
+  priority_id        Int
+  status_id          Int
+  type_id            Int
+  author_id          Int
+  due_date           DateTime? @db.Date
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  created_by         Int?
+  updated_by         Int?
+  exuid              String?   @unique(map: "exuid") @db.VarChar(100)
+  resolved           Boolean?  @default(false)
+  assignee_id        Int?
+  description        String?   @db.MediumText
+
+  @@index([assignee_id], map: "assignee_id")
+  @@index([author_id], map: "author_id")
+  @@index([learning_object_id], map: "learning_object_id")
+  @@index([lesson_id], map: "lesson_id")
+  @@index([priority_id], map: "priority_id")
+  @@index([resolved], map: "resolved")
+  @@index([screen_id], map: "screen_id")
+  @@index([screen_item_id], map: "screen_item_id")
+  @@index([status_id], map: "status_id")
+  @@index([type_id], map: "type_id")
+}
+
+model layout_items {
+  id               Int       @id @default(autoincrement())
+  uuid             String    @unique(map: "uuid") @db.VarChar(100)
+  exuid            String?   @db.VarChar(100)
+  layout_id        Int
+  x                Decimal   @default(0) @db.Decimal(10, 0)
+  y                Decimal   @default(0) @db.Decimal(10, 0)
+  width            Decimal   @default(0) @db.Decimal(10, 0)
+  height           Decimal   @default(0) @db.Decimal(10, 0)
+  zindex           Int       @default(0)
+  horizontal_align String?   @db.VarChar(10)
+  vertical_align   String?   @db.VarChar(10)
+  padding_top      Int       @default(0)
+  padding_bottom   Int       @default(0)
+  padding_left     Int       @default(0)
+  padding_right    Int       @default(0)
+  created_at       DateTime? @db.DateTime(0)
+  updated_at       DateTime? @db.DateTime(0)
+  created_by       Int?
+  updated_by       Int?
+
+  @@index([layout_id], map: "layout_id")
+}
+
+model layout_items_components {
+  layout_item_id Int
+  component_id   Int
+  created_at     DateTime? @db.DateTime(0)
+  updated_at     DateTime? @db.DateTime(0)
+  created_by     Int?
+  updated_by     Int?
+
+  // ������� ���
+  @@id([layout_item_id, component_id])
+  @@index([component_id], map: "component_id")
+  @@index([layout_item_id], map: "layout_item_id")
+}
+
+model layouts {
+  id                      Int       @id @default(autoincrement())
+  learning_object_type_id Int?
+  uuid                    String    @unique(map: "uuid") @db.VarChar(100)
+  exuid                   String?   @db.VarChar(100)
+  name                    String    @db.VarChar(100)
+  description             String?   @db.VarChar(1000)
+  active                  Boolean   @default(true)
+  width                   Int       @default(0)
+  height                  Int       @default(0)
+  padding_top             Int       @default(0)
+  padding_bottom          Int       @default(0)
+  padding_left            Int       @default(0)
+  padding_right           Int       @default(0)
+  created_at              DateTime? @db.DateTime(0)
+  updated_at              DateTime? @db.DateTime(0)
+  created_by              Int?
+  updated_by              Int?
+
+  @@index([learning_object_type_id], map: "learning_object_type_id")
+}
+
+model learning_object_custom_xmls {
+  id                 Int       @id @default(autoincrement())
+  learning_object_id Int
+  key                String    @db.VarChar(10)
+  xml                String    @db.MediumText
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  created_by         Int?
+  updated_by         Int?
+
+  @@index([learning_object_id], map: "learning_object_id")
+}
+
+model learning_object_designs {
+  id                 Int       @id @default(autoincrement())
+  anchor_1           String?   @db.VarChar(255)
+  anchor_2           String?   @db.VarChar(255)
+  anchor_3           String?   @db.VarChar(255)
+  theme              String?   @db.VarChar(255)
+  primary_objective  String?   @db.VarChar(1000)
+  concept            String?   @db.MediumText
+  common_approach    String?   @db.MediumText
+  alternate_approach String?   @db.MediumText
+  highlevel          String?   @db.MediumText
+  ui                 String?   @db.MediumText
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  created_by         Int?
+  updated_by         Int?
+  status_id          Int
+
+  @@index([status_id], map: "status_id")
+}
+
+model learning_object_glossary {
+  id                 Int       @id @default(autoincrement())
+  learning_object_id Int
+  term               String    @db.VarChar(100)
+  description        String?   @db.MediumText
+  audio_asset_id     Int?
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  created_by         Int?
+  updated_by         Int?
+
+  @@index([audio_asset_id], map: "audio_asset_id")
+  @@index([learning_object_id], map: "learning_object_id")
+}
+
+model learning_objects {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique(map: "uuid") @db.VarChar(100)
+  lesson_id   Int
+  sequence    Int       @default(0)
+  type_id     Int
+  status_id   Int
+  name        String    @db.VarChar(100)
+  description String?   @db.VarChar(1000)
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  created_by  Int?
+  updated_by  Int?
+  exuid       String    @db.VarChar(100)
+  project_id  Int
+  status_date DateTime? @db.DateTime(0)
+
+  @@unique([exuid, project_id], map: "exuid")
+  @@index([lesson_id], map: "lesson_id")
+  @@index([project_id], map: "project_id")
+  @@index([status_id], map: "status_id")
+  @@index([type_id], map: "type_id")
+}
+
+model learning_objects_assessments {
+  learning_object_id Int
+  assessment_id      Int
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  created_by         Int?
+  updated_by         Int?
+
+  @@id([learning_object_id, assessment_id]) // ����� ����
+  @@index([assessment_id], map: "assessment_id")
+  @@index([learning_object_id], map: "learning_object_id")
+}
+
+model learning_objects_documents {
+  learning_object_id Int
+  document_id        Int
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  created_by         Int?
+  updated_by         Int?
+
+  @@id([learning_object_id, document_id]) // ����� ����
+  @@index([document_id], map: "document_id")
+  @@index([learning_object_id], map: "learning_object_id")
+}
+
+model learning_objects_objectives {
+  learning_object_id Int
+  objective_id       Int
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  created_by         Int?
+  updated_by         Int?
+
+  @@id([learning_object_id, objective_id]) // ����� ����
+  @@index([learning_object_id], map: "learning_object_id")
+  @@index([objective_id], map: "learning_objective_id")
+}
+
+model learning_objects_standards {
+  learning_object_id Int
+  standard_id        Int
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  created_by         Int?
+  updated_by         Int?
+
+  @@id([learning_object_id, standard_id]) // ����� ����
+  @@index([learning_object_id], map: "learning_object_id")
+  @@index([standard_id], map: "standard_id")
+}
+
+// ** ����� ���: �� ���� ����� 3 ����� ���� **
+model learning_objects_roles_users {
+  learning_object_id Int
+  role_id            Int
+  user_id            Int
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  created_by         Int?
+  updated_by         Int?
+
+  // ������� ��� ���� ���� ��� 3 �����
+  @@id([learning_object_id, role_id, user_id])
+  @@index([learning_object_id], map: "learning_object_id")
+  @@index([role_id], map: "role_id")
+  @@index([user_id], map: "user_id")
+}
+
+model lesson_deployments {
+  id           Int       @id @default(autoincrement())
+  requested_by Int?
+  requested_at DateTime? @db.DateTime(0)
+  date         DateTime? @db.DateTime(0)
+  created_at   DateTime? @db.DateTime(0)
+  updated_at   DateTime? @db.DateTime(0)
+  created_by   Int?
+  updated_by   Int?
+
+  @@index([requested_by], map: "requested_by")
+}
+
+model lesson_schedules {
+  id                           Int       @id @default(autoincrement())
+  milestone1_target_status_id  Int?
+  milestone1_target_date       DateTime? @db.Date
+  milestone1_completion_date   DateTime? @db.Date
+  milestone2_target_status_id  Int?
+  milestone2_target_date       DateTime? @db.Date
+  milestone2_completion_date   DateTime? @db.Date
+  milestone3_target_status_id  Int?
+  milestone3_target_date       DateTime? @db.Date
+  milestone3_completion_date   DateTime? @db.Date
+  milestone4_target_status_id  Int?
+  milestone4_target_date       DateTime? @db.Date
+  milestone4_completion_date   DateTime? @db.Date
+  milestone5_target_status_id  Int?
+  milestone5_target_date       DateTime? @db.Date
+  milestone5_completion_date   DateTime? @db.Date
+  milestone6_target_status_id  Int?
+  milestone6_target_date       DateTime? @db.Date
+  milestone6_completion_date   DateTime? @db.Date
+  milestone7_target_status_id  Int?
+  milestone7_target_date       DateTime? @db.Date
+  milestone7_completion_date   DateTime? @db.Date
+  milestone8_target_status_id  Int?
+  milestone8_target_date       DateTime? @db.Date
+  milestone8_completion_date   DateTime? @db.Date
+  milestone9_target_status_id  Int?
+  milestone9_target_date       DateTime? @db.Date
+  milestone9_completion_date   DateTime? @db.Date
+  milestone10_target_status_id Int?
+  milestone10_target_date      DateTime? @db.Date
+  milestone10_completion_date  DateTime? @db.Date
+  last_review_date             DateTime? @db.DateTime(0)
+  created_at                   DateTime? @db.DateTime(0)
+  updated_at                   DateTime? @db.DateTime(0)
+  created_by                   Int?
+  updated_by                   Int?
+
+  @@index([milestone10_target_status_id], map: "milestone10_target_status_id")
+  @@index([milestone1_target_status_id], map: "milestone1_target_status_id")
+  @@index([milestone2_target_status_id], map: "milestone2_target_status_id")
+  @@index([milestone3_target_status_id], map: "milestone3_target_status_id")
+  @@index([milestone4_target_status_id], map: "milestone4_target_status_id")
+  @@index([milestone5_target_status_id], map: "milestone5_target_status_id")
+  @@index([milestone6_target_status_id], map: "milestone6_target_status_id")
+  @@index([milestone7_target_status_id], map: "milestone7_target_status_id")
+  @@index([milestone8_target_status_id], map: "milestone8_target_status_id")
+  @@index([milestone9_target_status_id], map: "milestone9_target_status_id")
+}
+
+model lessons {
+  id           Int       @id @default(autoincrement())
+  uuid         String    @unique(map: "uuid") @db.VarChar(100)
+  exuid        String    @default("") @db.VarChar(100)
+  type_id      Int
+  status_id    Int
+  grade_id     Int
+  unit_id      Int?
+  sequence     Int       @default(0)
+  name         String    @db.VarChar(100)
+  number       Int?
+  description  String?   @db.VarChar(1000)
+  created_at   DateTime? @db.DateTime(0)
+  updated_at   DateTime? @db.DateTime(0)
+  created_by   Int?
+  updated_by   Int?
+  project_id   Int
+  strand_id    Int
+  locked       Boolean   @default(false)
+  status_date  DateTime? @db.DateTime(0)
+  group        String?   @db.VarChar(100)
+  audio_talent String?   @db.VarChar(100)
+
+  @@unique([exuid, project_id], map: "exuid")
+  @@index([grade_id], map: "grade_id")
+  @@index([project_id], map: "project_id")
+  @@index([status_id], map: "status_id")
+  @@index([strand_id], map: "strand_id")
+  @@index([type_id], map: "type_id")
+  @@index([unit_id], map: "unit_id")
+}
+
+model lessons_documents {
+  lesson_id   Int
+  document_id Int
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  created_by  Int?
+  updated_by  Int?
+
+  // ����� @@ignore �� ���
+
+  // �������: ����� ���� �� ��������
+  @@id([lesson_id, document_id])
+  @@index([lesson_id], map: "lesson_id")
+  @@index([document_id], map: "role_id") // ����: ��� ������� �� ��������� ���� ���� role_id ��� ���� ���� �� ������ �� �� �� ���� �� ����� �� ���������
+}
+
+model lessons_roles_users {
+  lesson_id  Int
+  role_id    Int
+  user_id    Int
+  created_at DateTime? @db.DateTime(0)
+  updated_at DateTime? @db.DateTime(0)
+  created_by Int?
+  updated_by Int?
+
+  // ����� @@ignore �� ���
+
+  // �������: ����� ���� �� ��� 3 �����
+  @@id([lesson_id, role_id, user_id])
+  @@index([lesson_id], map: "lesson_id")
+  @@index([role_id], map: "role_id")
+  @@index([user_id], map: "user_id")
+}
+
+model lookups {
+  id                Int       @id @default(autoincrement())
+  parent_lookup_id  Int?
+  value             String    @db.VarChar(100)
+  lookup_type       String    @db.VarChar(3)
+  description       String?   @db.VarChar(1000)
+  additional_info_1 String?   @db.VarChar(1000)
+  additional_info_2 String?   @db.VarChar(1000)
+  additional_info_3 String?   @db.VarChar(1000)
+  additional_info_4 String?   @db.VarChar(1000)
+  additional_info_5 String?   @db.VarChar(1000)
+  created_at        DateTime? @db.DateTime(0)
+  updated_at        DateTime? @db.DateTime(0)
+  created_by        Int?
+  updated_by        Int?
+
+  @@index([lookup_type], map: "lookup_type")
+  @@index([parent_lookup_id], map: "parent_lookup_id")
+}
+
+model objectives {
+  id                  Int       @id @default(autoincrement())
+  uuid                String    @unique(map: "uuid") @db.VarChar(100)
+  teacher_description String    @db.VarChar(1000)
+  student_description String?   @db.VarChar(1000)
+  created_at          DateTime? @db.DateTime(0)
+  updated_at          DateTime? @db.DateTime(0)
+  created_by          Int?
+  updated_by          Int?
+  exuid               String    @db.VarChar(100)
+  objective_type      String    @default("L") @db.VarChar(3)
+  project_id          Int
+
+  @@unique([exuid, project_id], map: "exuid")
+}
+
+model projects {
+  id                      Int              @id @default(autoincrement())
+  uuid                    String           @unique(map: "uuid") @db.VarChar(100)
+  exuid                   String           @unique(map: "exuid") @db.VarChar(100)
+  name                    String           @unique(map: "name") @db.VarChar(100)
+  description             String?          @db.VarChar(1000)
+  url                     String           @unique(map: "url") @db.VarChar(100)
+  player_width            Int
+  player_height           Int
+  player_content_width    Int
+  player_content_height   Int
+  supports_jira           Boolean          @default(false)
+  jira_key                String?          @unique(map: "jira_key") @db.VarChar(100)
+  active                  Boolean          @default(true)
+  post_lo_save_handlers   String?          @db.VarChar(1000)
+  pre_deployment_handlers String?          @db.VarChar(1000)
+  created_at              DateTime?        @db.DateTime(0)
+  updated_at              DateTime?        @db.DateTime(0)
+  created_by              Int?
+  updated_by              Int?
+  base_style              String?          @db.VarChar(100)
+  projectsUsers           projects_users[]
+}
+
+model projects_users {
+  project_id Int
+  user_id    Int
+  created_at DateTime? @db.DateTime(0)
+  updated_at DateTime? @db.DateTime(0)
+  created_by Int?
+  updated_by Int?
+
+  // ��� �� ���� ��������
+  project projects @relation(fields: [project_id], references: [id])
+
+  // ��� �� ���� ����������
+  user users @relation(fields: [user_id], references: [id])
+
+  @@id([project_id, user_id])
+  @@index([project_id], map: "project_id")
+  @@index([user_id], map: "user_id")
+}
+
+model reports {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @db.VarChar(100)
+  name        String    @db.VarChar(100)
+  description String?   @db.VarChar(1000)
+  category_id Int
+  path        String?   @db.VarChar(255)
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  created_by  Int?
+  updated_by  Int?
+
+  @@index([category_id], map: "category_id")
+}
+
+model roles {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique(map: "uuid") @db.VarChar(100)
+  name        String    @db.VarChar(255)
+  description String?   @db.VarChar(1000)
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  created_by  Int?
+  updated_by  Int?
+  permissions Int?
+  project_id  Int
+
+  @@index([name], map: "name")
+  @@index([project_id], map: "project_id")
+}
+
+model schema_migrations {
+  version String @unique(map: "unique_schema_migrations") @db.VarChar(255)
+}
+
+model screen_item_attributes {
+  id             Int       @id @default(autoincrement())
+  uuid           String    @unique(map: "uuid") @db.VarChar(100)
+  screen_item_id Int
+  name           String    @db.VarChar(100)
+  value          String    @db.MediumText
+  attribute_type String    @db.VarChar(20)
+  data_type      String    @db.VarChar(10)
+  created_at     DateTime? @db.DateTime(0)
+  updated_at     DateTime? @db.DateTime(0)
+  created_by     Int?
+  updated_by     Int?
+
+  @@unique([screen_item_id, name], map: "name_unique")
+  @@index([name], map: "name")
+  @@index([screen_item_id], map: "screen_item_id")
+}
+
+model screen_item_text_attributes {
+  id                       Int       @id @default(autoincrement())
+  uuid                     String    @unique(map: "uuid") @db.VarChar(100)
+  exuid                    String?   @db.VarChar(100)
+  name                     String?   @db.VarChar(100)
+  value                    String    @db.MediumText
+  text_type                String    @db.VarChar(10)
+  audio_asset_id           Int?
+  created_at               DateTime? @db.DateTime(0)
+  updated_at               DateTime? @db.DateTime(0)
+  created_by               Int?
+  updated_by               Int?
+  audio_set_at             DateTime? @db.DateTime(0)
+  tts_version              String?   @db.MediumText
+  audio_version            String?   @db.MediumText
+  screen_item_id           Int
+  sequence                 Int       @default(0)
+  source_text_attribute_id Int?
+
+  @@index([audio_asset_id], map: "audio_asset_id")
+  @@index([source_text_attribute_id], map: "index_screen_item_text_attributes_on_source_text_attribute_id")
+  @@index([name], map: "name")
+  @@index([screen_item_id], map: "screen_item_id")
+  @@index([text_type], map: "text_type")
+}
+
+model screen_items {
+  id                    Int       @id @default(autoincrement())
+  uuid                  String    @unique(map: "uuid") @db.VarChar(100)
+  exuid                 String?   @db.VarChar(100)
+  tag                   String?   @db.VarChar(100)
+  description           String?   @db.VarChar(1000)
+  screen_id             Int?
+  layout_item_id        Int?
+  component_id          Int
+  persistent            Boolean   @default(false)
+  source_screen_item_id Int?
+  width                 Decimal?  @db.Decimal(10, 2)
+  height                Decimal?  @db.Decimal(10, 2)
+  zindex                Int?
+  tab_index             Int?
+  horizontal_align      String?   @db.VarChar(10)
+  vertical_align        String?   @db.VarChar(10)
+  padding_top           Int?
+  padding_bottom        Int?
+  padding_left          Int?
+  padding_right         Int?
+  created_at            DateTime? @db.DateTime(0)
+  updated_at            DateTime? @db.DateTime(0)
+  created_by            Int?
+  updated_by            Int?
+  tts                   Boolean   @default(true)
+  angle                 Decimal?  @db.Decimal(5, 2)
+  left                  Decimal?  @db.Decimal(10, 2)
+  right                 Decimal?  @db.Decimal(10, 2)
+  top                   Decimal?  @db.Decimal(10, 2)
+  bottom                Decimal?  @db.Decimal(10, 2)
+  transparency          Decimal   @default(0.00) @db.Decimal(5, 2)
+  template_id           Int?
+  locked_by_template    Boolean   @default(false)
+  template_item_id      Int?
+  resetable             Boolean?  @default(true)
+  group_id              String?   @db.VarChar(50)
+
+  @@index([component_id], map: "component_id")
+  @@index([exuid], map: "exuid")
+  @@index([template_id], map: "index_screen_items_on_template_id")
+  @@index([template_item_id], map: "index_screen_items_on_template_item_id")
+  @@index([layout_item_id], map: "layout_item_id")
+  @@index([screen_id], map: "screen_id")
+  @@index([source_screen_item_id], map: "source_screen_item_id")
+}
+
+model screen_items_assets {
+  screen_item_id Int
+  asset_id       Int
+  created_at     DateTime? @db.DateTime(0)
+  updated_at     DateTime? @db.DateTime(0)
+  created_by     Int?
+  updated_by     Int?
+
+  // ������� ���: ����� ����
+  @@id([screen_item_id, asset_id])
+  @@index([asset_id], map: "asset_id")
+  @@index([screen_item_id], map: "screen_item_id")
+}
+
+model screens {
+  id                  Int       @id @default(autoincrement())
+  uuid                String    @unique(map: "uuid") @db.VarChar(100)
+  exuid               String?   @db.VarChar(100)
+  name                String    @db.VarChar(100)
+  description         String?   @db.VarChar(1000)
+  learning_object_id  Int
+  sequence            Int       @default(0)
+  layout_id           Int
+  type_id             Int
+  status_id           Int
+  script              String?   @db.MediumText
+  created_at          DateTime? @db.DateTime(0)
+  updated_at          DateTime? @db.DateTime(0)
+  created_by          Int?
+  updated_by          Int?
+  bindings            String?   @db.MediumText
+  background_asset_id Int?
+  active              Boolean   @default(true)
+  guide_asset_id      Int?
+  title               String?   @db.VarChar(100)
+  status_date         DateTime? @db.DateTime(0)
+  visible             Boolean?  @default(true)
+  template_id         Int?
+  locked_to_template  Boolean   @default(false)
+
+  @@index([background_asset_id], map: "background_asset_id")
+  @@index([exuid], map: "exuid")
+  @@index([guide_asset_id], map: "guide_asset_id")
+  @@index([template_id], map: "index_screens_on_template_id")
+  @@index([layout_id], map: "layout_id")
+  @@index([learning_object_id], map: "learning_object_id")
+  @@index([status_id], map: "status_id")
+  @@index([type_id], map: "type_id")
+}
+
+model simulations {
+  id                     Int       @id @default(autoincrement())
+  name                   String    @db.VarChar(100)
+  description            String?   @db.VarChar(1000)
+  simulation_path        String?   @db.VarChar(1000)
+  created_at             DateTime? @db.DateTime(0)
+  updated_at             DateTime? @db.DateTime(0)
+  created_by             Int?
+  updated_by             Int?
+  assets_path            String?   @db.VarChar(1000)
+  configuration_xml_path String?   @db.VarChar(1000)
+  localization_xml_path  String?   @db.VarChar(1000)
+  active                 Boolean   @default(true)
+  simulation_type        String    @db.VarChar(10)
+}
+
+model standards {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique(map: "uuid") @db.VarChar(100)
+  exuid       String    @unique(map: "exuid") @db.VarChar(100)
+  issued_by   String    @db.VarChar(10)
+  category    String?   @db.VarChar(100)
+  description String?   @db.MediumText
+  complexity  String?   @db.VarChar(100)
+  grade_id    Int?
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  created_by  Int?
+  updated_by  Int?
+
+  @@index([grade_id], map: "grade_id")
+}
+
+model standards_standards_mapping {
+  standard1_id Int
+  standard2_id Int
+  category     String?   @db.VarChar(100)
+  sub_category String?   @db.VarChar(100)
+  created_at   DateTime? @db.DateTime(0)
+  updated_at   DateTime? @db.DateTime(0)
+  created_by   Int?
+  updated_by   Int?
+
+  @@unique([standard1_id, standard2_id], map: "standards")
+  @@index([standard1_id], map: "standard1_id")
+  @@index([standard2_id], map: "standard2_id")
+}
+
+model taggings {
+  id            Int       @id @default(autoincrement())
+  tag_id        Int?
+  taggable_id   Int?
+  taggable_type String?   @db.VarChar(255)
+  created_at    DateTime? @db.DateTime(0)
+
+  @@index([tag_id], map: "index_taggings_on_tag_id")
+  @@index([taggable_id, taggable_type], map: "index_taggings_on_taggable_id_and_taggable_type")
+}
+
+model tags {
+  id         Int       @id @default(autoincrement())
+  name       String?   @db.VarChar(255)
+  namespace  String?   @db.VarChar(255)
+  predicate  String?   @db.VarChar(255)
+  value      String?   @db.VarChar(255)
+  created_at DateTime? @db.DateTime(0)
+}
+
+model temp {
+  key        String    @unique(map: "key") @db.VarChar(100)
+  value      String    @db.MediumText
+  created_at DateTime? @db.DateTime(0)
+  updated_at DateTime? @db.DateTime(0)
+  created_by Int?
+  updated_by Int?
+}
+
+model temp2 {
+  id Int @id @default(0) // ���� @id ���
+  // @@ignore <-- ����� ��
+}
+
+model template_categories {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique(map: "uuid") @db.VarChar(100)
+  name        String    @db.VarChar(100)
+  description String?   @db.VarChar(1000)
+  project_id  Int
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  created_by  Int?
+  updated_by  Int?
+
+  @@index([project_id], map: "project_id")
+}
+
+model template_temp {
+  screen_id     String  @id @db.VarChar(255) // ������� ��� �����
+  screen_name   String? @db.VarChar(255)
+  category_id   String? @db.VarChar(255)
+  category_name String? @db.VarChar(255)
+  template_id   String? @db.VarChar(255)
+}
+
+model templates {
+  id                   Int       @id @default(autoincrement())
+  uuid                 String    @unique(map: "uuid") @db.VarChar(100)
+  name                 String    @db.VarChar(100)
+  description          String?   @db.VarChar(1000)
+  sequence             Int       @default(0)
+  layout_id            Int
+  template_category_id Int
+  background_asset_id  Int?
+  guide_asset_id       Int?
+  script               String?   @db.MediumText
+  bindings             String?   @db.MediumText
+  created_at           DateTime? @db.DateTime(0)
+  updated_at           DateTime? @db.DateTime(0)
+  created_by           Int?
+  updated_by           Int?
+  working_copy_id      Int?
+  visible              Boolean?  @default(false)
+
+  @@index([background_asset_id], map: "background_asset_id")
+  @@index([guide_asset_id], map: "guide_asset_id")
+  @@index([working_copy_id], map: "index_templates_on_working_copy_id")
+  @@index([layout_id], map: "layout_id")
+  @@index([template_category_id], map: "learning_object_id")
+}
+
+model templates_change_log {
+  id          Int       @id @default(autoincrement())
+  change_log  String?   @db.Text
+  template_id Int
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  created_by  Int?
+  updated_by  Int?
+}
+
+model tools {
+  id                 Int       @id @default(autoincrement())
+  name               String    @db.VarChar(100)
+  description        String?   @db.VarChar(1000)
+  class_identifier   String?   @db.VarChar(100)
+  data_path          String?   @db.VarChar(1000)
+  configuration_path String?   @db.VarChar(1000)
+  active             Boolean   @default(true)
+  created_at         DateTime? @db.DateTime(0)
+  updated_at         DateTime? @db.DateTime(0)
+  created_by         Int?
+  updated_by         Int?
+}
+
+model tts_sequence {
+  id Int @id // ���� @id ���
+}
+
+model units {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique(map: "uuid") @db.VarChar(100)
+  exuid       String    @db.VarChar(100)
+  name        String    @db.VarChar(100)
+  number      Int?
+  description String?   @db.VarChar(1000)
+  project_id  Int
+  sequence    Int       @default(0)
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  created_by  Int?
+  updated_by  Int?
+
+  @@unique([project_id, exuid], map: "exuid")
+  @@index([project_id], map: "project_id")
+}
+
+model users {
+  id                        Int              @id @default(autoincrement())
+  uuid                      String           @unique(map: "uuid") @db.VarChar(100)
+  status                    String           @default("A") @db.VarChar(3)
+  first_name                String?          @db.VarChar(20)
+  last_name                 String?          @db.VarChar(20)
+  alias                     String           @db.VarChar(50)
+  login                     String           @unique(map: "login") @db.VarChar(40)
+  description               String?          @db.VarChar(1000)
+  crypted_password          String           @db.VarChar(40)
+  salt                      String           @db.VarChar(40)
+  base_role                 String           @default("U") @db.VarChar(3)
+  email                     String?          @unique(map: "email") @db.VarChar(40)
+  phone                     String?          @db.VarChar(20)
+  remember_token            String?          @db.VarChar(255)
+  remember_token_expires_at DateTime?        @db.DateTime(0)
+  created_at                DateTime?        @db.DateTime(0)
+  updated_at                DateTime?        @db.DateTime(0)
+  created_by                Int?
+  updated_by                Int?
+  last_seen                 DateTime?        @db.DateTime(0)
+  projectsUsers             projects_users[]
+}
