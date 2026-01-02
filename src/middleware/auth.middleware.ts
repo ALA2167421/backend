@@ -1,8 +1,6 @@
-﻿import { Request, Response, NextFunction } from 'express';
-import { UserService } from '../services/user.service';
-import prisma from '../services/base.service';
+import { Request, Response, NextFunction } from 'express';
 
-// توسيع واجهة Request لتشمل المستخدم والمشروع
+// Extend Express Request type to include user info
 declare global {
   namespace Express {
     interface Request {
@@ -12,27 +10,38 @@ declare global {
   }
 }
 
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ success: false, message: 'No token provided' });
+  }
+
+  // Expecting format: "Bearer <token>" or just "<token>"
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+
   try {
-    // محاكاة استخراج التوكن أو الجلسة
-    // في الواقع ستستخدم JWT أو Session ID من الهيدر
-    const userId = req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : 1; 
-    const projectId = req.headers['x-project-id'] ? parseInt(req.headers['x-project-id'] as string) : 1;
-
-    // جلب المستخدم (يمكن تحسينه بالكاش)
-    const user = await prisma.users.findUnique({ where: { id: userId } });
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
-
-    req.user = user;
+    // --- Mock Token Validation Logic (Legacy Sim) ---
+    // In previous step we made token = base64(id:login:timestamp)
     
-    // جلب المشروع الحالي
-    if (projectId) {
-      const project = await prisma.projects.findUnique({ where: { id: projectId } });
-      req.project = project;
+    const decoded = Buffer.from(token, 'base64').toString('utf-8');
+    const parts = decoded.split(':');
+
+    if (parts.length < 3) {
+        throw new Error("Invalid token format");
     }
 
+    const [userId, login, timestamp] = parts;
+
+    // Optional: Check timestamp expiration (e.g., 24 hours)
+    // const tokenTime = parseInt(timestamp);
+    // if (Date.now() - tokenTime > 86400000) throw new Error("Token expired");
+
+    // Inject user info into request
+    req.user = { id: parseInt(userId), login: login };
+    
     next();
-  } catch (error) {
-    res.status(500).json({ error: 'Auth Error' });
+  } catch (e) {
+    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 };

@@ -1,16 +1,22 @@
-﻿import { Request, Response } from 'express';
-import { LessonService } from '../services/lesson.service'; // تأكدنا من وجود هذا في خطوات سابقة
-import prisma from '../services/base.service';
+import { Request, Response } from 'express';
+import { LessonService } from '../services/lesson.service';
+import prisma from '../lib/prisma'; // Use singleton instance
 
 export class LessonController {
   
   // List all lessons
   static async index(req: Request, res: Response) {
     try {
-      const lessons = await prisma.lessons.findMany({ orderBy: { id: 'desc' } });
+      // Simple fetch without relations to test basic connectivity
+      const lessons = await prisma.lessons.findMany({ 
+          orderBy: { id: 'desc' },
+          take: 100 // Limit results initially to prevent overflow
+      });
+      
       res.json({ success: true, data: lessons });
-    } catch (e) {
-      res.status(500).json({ success: false, error: e });
+    } catch (e: any) {
+      console.error("❌ ERROR fetching lessons:", e); // Log to server console
+      res.status(500).json({ success: false, message: "Server Error", error: e.message || e });
     }
   }
 
@@ -24,8 +30,9 @@ export class LessonController {
          return;
       }
       res.json({ success: true, data: lesson });
-    } catch (e) {
-      res.status(500).json({ success: false, error: e });
+    } catch (e: any) {
+      console.error("❌ ERROR fetching lesson details:", e);
+      res.status(500).json({ success: false, error: e.message || e });
     }
   }
 
@@ -36,8 +43,9 @@ export class LessonController {
         data: { ...req.body, created_at: new Date(), updated_at: new Date() }
       });
       res.json({ success: true, data: newLesson });
-    } catch (e) {
-      res.status(500).json({ success: false, error: e });
+    } catch (e: any) {
+      console.error("❌ ERROR creating lesson:", e);
+      res.status(500).json({ success: false, error: e.message || e });
     }
   }
 
@@ -50,8 +58,9 @@ export class LessonController {
         data: { ...req.body, updated_at: new Date() }
       });
       res.json({ success: true, data: updated });
-    } catch (e) {
-      res.status(500).json({ success: false, error: e });
+    } catch (e: any) {
+      console.error("❌ ERROR updating lesson:", e);
+      res.status(500).json({ success: false, error: e.message || e });
     }
   }
 
@@ -61,8 +70,9 @@ export class LessonController {
       const { id } = req.params;
       await prisma.lessons.delete({ where: { id: Number(id) } });
       res.json({ success: true });
-    } catch (e) {
-      res.status(500).json({ success: false, error: e });
+    } catch (e: any) {
+      console.error("❌ ERROR deleting lesson:", e);
+      res.status(500).json({ success: false, error: e.message || e });
     }
   }
 }

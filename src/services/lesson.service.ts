@@ -1,24 +1,25 @@
-﻿import prisma from './base.service';
+import prisma from '../lib/prisma';
 
 export class LessonService {
 
   static async findOne(id: number) {
-    // 1. جلب الدرس
+    // 1. Fetch Lesson
     const lesson = await prisma.lessons.findUnique({
       where: { id }
     });
 
     if (!lesson) return null;
 
-    // 2. جلب الكائنات التعليمية
+    // 2. Fetch Learning Objects (Plain query)
     const learningObjects = await prisma.learning_objects.findMany({
       where: { lesson_id: id },
       orderBy: { sequence: 'asc' }
     });
 
-    // 3. جلب الشاشات
+    // 3. Fetch Screens for these LOs
     const loIds = learningObjects.map(lo => lo.id);
     let screens: any[] = [];
+    
     if (loIds.length > 0) {
         screens = await prisma.screens.findMany({
             where: { learning_object_id: { in: loIds } },
@@ -26,51 +27,43 @@ export class LessonService {
         });
     }
 
-    // 4. جلب عناصر الشاشة (Items) + المكونات (Components) يدوياً
+    // 4. Fetch Items & Components manually (Safe mode)
     const screenIds = screens.map(s => s.id);
     let items: any[] = [];
     let components: any[] = [];
     
     if (screenIds.length > 0) {
-        // أ. جلب العناصر الخام
+        // Fetch raw items
         items = await prisma.screen_items.findMany({
             where: { screen_id: { in: screenIds } }
         });
 
-        // ب. استخراج معرفات المكونات المطلوبة
+        // Fetch components
         const componentIds = items
             .map(i => i.component_id)
-            .filter(id => id != null); // استبعاد القيم الفارغة
+            .filter(cid => cid != null)
+            // @ts-ignore
+            .filter((v, i, a) => a.indexOf(v) === i); // Unique
 
         if (componentIds.length > 0) {
-            // ج. جلب المكونات
             components = await prisma.components.findMany({
                 where: { id: { in: componentIds } }
             });
         }
     }
 
-    // 5. تجميع البيانات (Stitching)
-    // دمج المكون داخل العنصر، ثم دمج العنصر داخل الشاشة
+    // 5. Stitching Data
     const screensWithItems = screens.map(s => {
-        // العناصر الخاصة بهذه الشاشة
         const myItems = items.filter(i => i.screen_id === s.id);
-        
-        // ربط كل عنصر بالمكون الخاص به
         const myItemsWithComponents = myItems.map(item => {
             return {
                 ...item,
                 component: components.find(c => c.id === item.component_id)
             };
         });
-
-        return {
-            ...s,
-            items: myItemsWithComponents
-        };
+        return { ...s, items: myItemsWithComponents };
     });
 
-    // نوزع الشاشات (المحملة بالعناصر) على الكائنات
     const learningObjectsWithChildren = learningObjects.map(lo => {
         return {
             ...lo,

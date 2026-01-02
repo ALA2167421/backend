@@ -1,12 +1,157 @@
 generator client {
   provider = "prisma-client-js"
-  // لا تضع output، دعه ينزل في المكان الافتراضي node_modules
 }
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+// --- Models with Added Relations ---
+
+model components {
+  id                     Int       @id @default(autoincrement())
+  name                   String    @db.VarChar(100)
+  description            String?   @db.VarChar(1000)
+  component_type         String    @db.VarChar(20)
+  alias                  String    @unique(map: "alias") @db.VarChar(100)
+  layered                Boolean   @default(false)
+  tracked                Boolean   @default(false)
+  color                  String?   @db.VarChar(10)
+  created_at             DateTime? @db.DateTime(0)
+  updated_at             DateTime? @db.DateTime(0)
+  created_by             Int?
+  updated_by             Int?
+  active                 Boolean   @default(true)
+  configuration_provider String?   @db.VarChar(100)
+  tts                    Boolean   @default(true)
+  protected_properties   String?   @db.VarChar(200)
+  include_in             String?   @default("") @db.VarChar(255)
+  exclude_from           String?   @default("") @db.VarChar(255)
+
+  // Relation Added
+  screen_items           screen_items[]
+}
+
+model learning_objects {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique(map: "uuid") @db.VarChar(100)
+  lesson_id   Int
+  sequence    Int       @default(0)
+  type_id     Int
+  status_id   Int
+  name        String    @db.VarChar(100)
+  description String?   @db.VarChar(1000)
+  created_at  DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
+  created_by  Int?
+  updated_by  Int?
+  exuid       String    @db.VarChar(100)
+  project_id  Int
+  status_date DateTime? @db.DateTime(0)
+
+  // Relation Added
+  screens     screens[]
+
+  @@unique([exuid, project_id], map: "exuid")
+  @@index([lesson_id], map: "lesson_id")
+  @@index([project_id], map: "project_id")
+  @@index([status_id], map: "status_id")
+  @@index([type_id], map: "type_id")
+}
+
+model screens {
+  id                  Int       @id @default(autoincrement())
+  uuid                String    @unique(map: "uuid") @db.VarChar(100)
+  exuid               String?   @db.VarChar(100)
+  name                String    @db.VarChar(100)
+  description         String?   @db.VarChar(1000)
+  learning_object_id  Int
+  sequence            Int       @default(0)
+  layout_id           Int
+  type_id             Int
+  status_id           Int
+  script              String?   @db.MediumText
+  created_at          DateTime? @db.DateTime(0)
+  updated_at          DateTime? @db.DateTime(0)
+  created_by          Int?
+  updated_by          Int?
+  bindings            String?   @db.MediumText
+  background_asset_id Int?
+  active              Boolean   @default(true)
+  guide_asset_id      Int?
+  title               String?   @db.VarChar(100)
+  status_date         DateTime? @db.DateTime(0)
+  visible             Boolean?  @default(true)
+  template_id         Int?
+  locked_to_template  Boolean   @default(false)
+
+  // Relations Added
+  learning_object     learning_objects @relation(fields: [learning_object_id], references: [id])
+  screen_items        screen_items[]
+
+  @@index([background_asset_id], map: "background_asset_id")
+  @@index([exuid], map: "exuid")
+  @@index([guide_asset_id], map: "guide_asset_id")
+  @@index([template_id], map: "index_screens_on_template_id")
+  @@index([layout_id], map: "layout_id")
+  @@index([learning_object_id], map: "learning_object_id")
+  @@index([status_id], map: "status_id")
+  @@index([type_id], map: "type_id")
+}
+
+model screen_items {
+  id                    Int       @id @default(autoincrement())
+  uuid                  String    @unique(map: "uuid") @db.VarChar(100)
+  exuid                 String?   @db.VarChar(100)
+  tag                   String?   @db.VarChar(100)
+  description           String?   @db.VarChar(1000)
+  screen_id             Int?
+  layout_item_id        Int?
+  component_id          Int
+  persistent            Boolean   @default(false)
+  source_screen_item_id Int?
+  width                 Decimal?  @db.Decimal(10, 2)
+  height                Decimal?  @db.Decimal(10, 2)
+  zindex                Int?
+  tab_index             Int?
+  horizontal_align      String?   @db.VarChar(10)
+  vertical_align        String?   @db.VarChar(10)
+  padding_top           Int?
+  padding_bottom        Int?
+  padding_left          Int?
+  padding_right         Int?
+  created_at            DateTime? @db.DateTime(0)
+  updated_at            DateTime? @db.DateTime(0)
+  created_by            Int?
+  updated_by            Int?
+  tts                   Boolean   @default(true)
+  angle                 Decimal?  @db.Decimal(5, 2)
+  left                  Decimal?  @db.Decimal(10, 2)
+  right                 Decimal?  @db.Decimal(10, 2)
+  top                   Decimal?  @db.Decimal(10, 2)
+  bottom                Decimal?  @db.Decimal(10, 2)
+  transparency          Decimal   @default(0.00) @db.Decimal(5, 2)
+  template_id           Int?
+  locked_by_template    Boolean   @default(false)
+  template_item_id      Int?
+  resetable             Boolean?  @default(true)
+  group_id              String?   @db.VarChar(50)
+
+  // Relations Added
+  screen                screens?   @relation(fields: [screen_id], references: [id])
+  component             components @relation(fields: [component_id], references: [id])
+
+  @@index([component_id], map: "component_id")
+  @@index([exuid], map: "exuid")
+  @@index([template_id], map: "index_screen_items_on_template_id")
+  @@index([template_item_id], map: "index_screen_items_on_template_item_id")
+  @@index([layout_item_id], map: "layout_item_id")
+  @@index([screen_id], map: "screen_id")
+  @@index([source_screen_item_id], map: "source_screen_item_id")
+}
+
+// --- Other Models (Kept as is for completeness) ---
 
 model assessments {
   id              Int       @id @default(autoincrement())
@@ -47,7 +192,6 @@ model asset_versions {
   updated_at  DateTime? @db.DateTime(0)
   created_by  Int?
   updated_by  Int?
-
   @@index([asset_id], map: "asset_id")
   @@index([author_id], map: "author_id")
   @@index([file_id], map: "file_id")
@@ -77,28 +221,7 @@ model assets {
 }
 
 model assets_sequence {
-  id Int @id // ���� @id ���
-}
-
-model components {
-  id                     Int       @id @default(autoincrement())
-  name                   String    @db.VarChar(100)
-  description            String?   @db.VarChar(1000)
-  component_type         String    @db.VarChar(20)
-  alias                  String    @unique(map: "alias") @db.VarChar(100)
-  layered                Boolean   @default(false)
-  tracked                Boolean   @default(false)
-  color                  String?   @db.VarChar(10)
-  created_at             DateTime? @db.DateTime(0)
-  updated_at             DateTime? @db.DateTime(0)
-  created_by             Int?
-  updated_by             Int?
-  active                 Boolean   @default(true)
-  configuration_provider String?   @db.VarChar(100)
-  tts                    Boolean   @default(true)
-  protected_properties   String?   @db.VarChar(200)
-  include_in             String?   @default("") @db.VarChar(255)
-  exclude_from           String?   @default("") @db.VarChar(255)
+  id Int @id 
 }
 
 model document_versions {
@@ -112,7 +235,6 @@ model document_versions {
   updated_at  DateTime? @db.DateTime(0)
   created_by  Int?
   updated_by  Int?
-
   @@index([author_id], map: "author_id")
   @@index([document_id], map: "document_id")
   @@index([file_id], map: "file_id")
@@ -131,7 +253,6 @@ model documents {
   updated_at  DateTime? @db.DateTime(0)
   created_by  Int?
   updated_by  Int?
-
   @@index([author_id], map: "author_id")
   @@index([category_id], map: "category_id")
   @@index([status_id], map: "status_id")
@@ -154,12 +275,11 @@ model files {
   updated_at   DateTime? @db.DateTime(0)
   created_by   Int?
   updated_by   Int?
-
   @@index([author_id], map: "author_id")
 }
 
 model fix_si {
-  id        Int  @id @default(0) // ���� @id ���
+  id        Int  @id @default(0) 
   screen_id Int?
 }
 
@@ -245,7 +365,6 @@ model layout_items_components {
   created_by     Int?
   updated_by     Int?
 
-  // ������� ���
   @@id([layout_item_id, component_id])
   @@index([component_id], map: "component_id")
   @@index([layout_item_id], map: "layout_item_id")
@@ -269,7 +388,6 @@ model layouts {
   updated_at              DateTime? @db.DateTime(0)
   created_by              Int?
   updated_by              Int?
-
   @@index([learning_object_type_id], map: "learning_object_type_id")
 }
 
@@ -282,7 +400,6 @@ model learning_object_custom_xmls {
   updated_at         DateTime? @db.DateTime(0)
   created_by         Int?
   updated_by         Int?
-
   @@index([learning_object_id], map: "learning_object_id")
 }
 
@@ -317,33 +434,8 @@ model learning_object_glossary {
   updated_at         DateTime? @db.DateTime(0)
   created_by         Int?
   updated_by         Int?
-
   @@index([audio_asset_id], map: "audio_asset_id")
   @@index([learning_object_id], map: "learning_object_id")
-}
-
-model learning_objects {
-  id          Int       @id @default(autoincrement())
-  uuid        String    @unique(map: "uuid") @db.VarChar(100)
-  lesson_id   Int
-  sequence    Int       @default(0)
-  type_id     Int
-  status_id   Int
-  name        String    @db.VarChar(100)
-  description String?   @db.VarChar(1000)
-  created_at  DateTime? @db.DateTime(0)
-  updated_at  DateTime? @db.DateTime(0)
-  created_by  Int?
-  updated_by  Int?
-  exuid       String    @db.VarChar(100)
-  project_id  Int
-  status_date DateTime? @db.DateTime(0)
-
-  @@unique([exuid, project_id], map: "exuid")
-  @@index([lesson_id], map: "lesson_id")
-  @@index([project_id], map: "project_id")
-  @@index([status_id], map: "status_id")
-  @@index([type_id], map: "type_id")
 }
 
 model learning_objects_assessments {
@@ -353,8 +445,7 @@ model learning_objects_assessments {
   updated_at         DateTime? @db.DateTime(0)
   created_by         Int?
   updated_by         Int?
-
-  @@id([learning_object_id, assessment_id]) // ����� ����
+  @@id([learning_object_id, assessment_id]) 
   @@index([assessment_id], map: "assessment_id")
   @@index([learning_object_id], map: "learning_object_id")
 }
@@ -366,8 +457,7 @@ model learning_objects_documents {
   updated_at         DateTime? @db.DateTime(0)
   created_by         Int?
   updated_by         Int?
-
-  @@id([learning_object_id, document_id]) // ����� ����
+  @@id([learning_object_id, document_id]) 
   @@index([document_id], map: "document_id")
   @@index([learning_object_id], map: "learning_object_id")
 }
@@ -379,8 +469,7 @@ model learning_objects_objectives {
   updated_at         DateTime? @db.DateTime(0)
   created_by         Int?
   updated_by         Int?
-
-  @@id([learning_object_id, objective_id]) // ����� ����
+  @@id([learning_object_id, objective_id]) 
   @@index([learning_object_id], map: "learning_object_id")
   @@index([objective_id], map: "learning_objective_id")
 }
@@ -392,13 +481,11 @@ model learning_objects_standards {
   updated_at         DateTime? @db.DateTime(0)
   created_by         Int?
   updated_by         Int?
-
-  @@id([learning_object_id, standard_id]) // ����� ����
+  @@id([learning_object_id, standard_id]) 
   @@index([learning_object_id], map: "learning_object_id")
   @@index([standard_id], map: "standard_id")
 }
 
-// ** ����� ���: �� ���� ����� 3 ����� ���� **
 model learning_objects_roles_users {
   learning_object_id Int
   role_id            Int
@@ -407,8 +494,6 @@ model learning_objects_roles_users {
   updated_at         DateTime? @db.DateTime(0)
   created_by         Int?
   updated_by         Int?
-
-  // ������� ��� ���� ���� ��� 3 �����
   @@id([learning_object_id, role_id, user_id])
   @@index([learning_object_id], map: "learning_object_id")
   @@index([role_id], map: "role_id")
@@ -424,7 +509,6 @@ model lesson_deployments {
   updated_at   DateTime? @db.DateTime(0)
   created_by   Int?
   updated_by   Int?
-
   @@index([requested_by], map: "requested_by")
 }
 
@@ -465,7 +549,6 @@ model lesson_schedules {
   updated_at                   DateTime? @db.DateTime(0)
   created_by                   Int?
   updated_by                   Int?
-
   @@index([milestone10_target_status_id], map: "milestone10_target_status_id")
   @@index([milestone1_target_status_id], map: "milestone1_target_status_id")
   @@index([milestone2_target_status_id], map: "milestone2_target_status_id")
@@ -518,12 +601,9 @@ model lessons_documents {
   created_by  Int?
   updated_by  Int?
 
-  // ����� @@ignore �� ���
-
-  // �������: ����� ���� �� ��������
   @@id([lesson_id, document_id])
   @@index([lesson_id], map: "lesson_id")
-  @@index([document_id], map: "role_id") // ����: ��� ������� �� ��������� ���� ���� role_id ��� ���� ���� �� ������ �� �� �� ���� �� ����� �� ���������
+  @@index([document_id], map: "role_id") 
 }
 
 model lessons_roles_users {
@@ -535,9 +615,6 @@ model lessons_roles_users {
   created_by Int?
   updated_by Int?
 
-  // ����� @@ignore �� ���
-
-  // �������: ����� ���� �� ��� 3 �����
   @@id([lesson_id, role_id, user_id])
   @@index([lesson_id], map: "lesson_id")
   @@index([role_id], map: "role_id")
@@ -559,7 +636,6 @@ model lookups {
   updated_at        DateTime? @db.DateTime(0)
   created_by        Int?
   updated_by        Int?
-
   @@index([lookup_type], map: "lookup_type")
   @@index([parent_lookup_id], map: "parent_lookup_id")
 }
@@ -611,11 +687,7 @@ model projects_users {
   updated_at DateTime? @db.DateTime(0)
   created_by Int?
   updated_by Int?
-
-  // ��� �� ���� ��������
   project projects @relation(fields: [project_id], references: [id])
-
-  // ��� �� ���� ����������
   user users @relation(fields: [user_id], references: [id])
 
   @@id([project_id, user_id])
@@ -634,7 +706,6 @@ model reports {
   updated_at  DateTime? @db.DateTime(0)
   created_by  Int?
   updated_by  Int?
-
   @@index([category_id], map: "category_id")
 }
 
@@ -694,59 +765,11 @@ model screen_item_text_attributes {
   screen_item_id           Int
   sequence                 Int       @default(0)
   source_text_attribute_id Int?
-
   @@index([audio_asset_id], map: "audio_asset_id")
   @@index([source_text_attribute_id], map: "index_screen_item_text_attributes_on_source_text_attribute_id")
   @@index([name], map: "name")
   @@index([screen_item_id], map: "screen_item_id")
   @@index([text_type], map: "text_type")
-}
-
-model screen_items {
-  id                    Int       @id @default(autoincrement())
-  uuid                  String    @unique(map: "uuid") @db.VarChar(100)
-  exuid                 String?   @db.VarChar(100)
-  tag                   String?   @db.VarChar(100)
-  description           String?   @db.VarChar(1000)
-  screen_id             Int?
-  layout_item_id        Int?
-  component_id          Int
-  persistent            Boolean   @default(false)
-  source_screen_item_id Int?
-  width                 Decimal?  @db.Decimal(10, 2)
-  height                Decimal?  @db.Decimal(10, 2)
-  zindex                Int?
-  tab_index             Int?
-  horizontal_align      String?   @db.VarChar(10)
-  vertical_align        String?   @db.VarChar(10)
-  padding_top           Int?
-  padding_bottom        Int?
-  padding_left          Int?
-  padding_right         Int?
-  created_at            DateTime? @db.DateTime(0)
-  updated_at            DateTime? @db.DateTime(0)
-  created_by            Int?
-  updated_by            Int?
-  tts                   Boolean   @default(true)
-  angle                 Decimal?  @db.Decimal(5, 2)
-  left                  Decimal?  @db.Decimal(10, 2)
-  right                 Decimal?  @db.Decimal(10, 2)
-  top                   Decimal?  @db.Decimal(10, 2)
-  bottom                Decimal?  @db.Decimal(10, 2)
-  transparency          Decimal   @default(0.00) @db.Decimal(5, 2)
-  template_id           Int?
-  locked_by_template    Boolean   @default(false)
-  template_item_id      Int?
-  resetable             Boolean?  @default(true)
-  group_id              String?   @db.VarChar(50)
-
-  @@index([component_id], map: "component_id")
-  @@index([exuid], map: "exuid")
-  @@index([template_id], map: "index_screen_items_on_template_id")
-  @@index([template_item_id], map: "index_screen_items_on_template_item_id")
-  @@index([layout_item_id], map: "layout_item_id")
-  @@index([screen_id], map: "screen_id")
-  @@index([source_screen_item_id], map: "source_screen_item_id")
 }
 
 model screen_items_assets {
@@ -756,47 +779,9 @@ model screen_items_assets {
   updated_at     DateTime? @db.DateTime(0)
   created_by     Int?
   updated_by     Int?
-
-  // ������� ���: ����� ����
   @@id([screen_item_id, asset_id])
   @@index([asset_id], map: "asset_id")
   @@index([screen_item_id], map: "screen_item_id")
-}
-
-model screens {
-  id                  Int       @id @default(autoincrement())
-  uuid                String    @unique(map: "uuid") @db.VarChar(100)
-  exuid               String?   @db.VarChar(100)
-  name                String    @db.VarChar(100)
-  description         String?   @db.VarChar(1000)
-  learning_object_id  Int
-  sequence            Int       @default(0)
-  layout_id           Int
-  type_id             Int
-  status_id           Int
-  script              String?   @db.MediumText
-  created_at          DateTime? @db.DateTime(0)
-  updated_at          DateTime? @db.DateTime(0)
-  created_by          Int?
-  updated_by          Int?
-  bindings            String?   @db.MediumText
-  background_asset_id Int?
-  active              Boolean   @default(true)
-  guide_asset_id      Int?
-  title               String?   @db.VarChar(100)
-  status_date         DateTime? @db.DateTime(0)
-  visible             Boolean?  @default(true)
-  template_id         Int?
-  locked_to_template  Boolean   @default(false)
-
-  @@index([background_asset_id], map: "background_asset_id")
-  @@index([exuid], map: "exuid")
-  @@index([guide_asset_id], map: "guide_asset_id")
-  @@index([template_id], map: "index_screens_on_template_id")
-  @@index([layout_id], map: "layout_id")
-  @@index([learning_object_id], map: "learning_object_id")
-  @@index([status_id], map: "status_id")
-  @@index([type_id], map: "type_id")
 }
 
 model simulations {
@@ -828,7 +813,6 @@ model standards {
   updated_at  DateTime? @db.DateTime(0)
   created_by  Int?
   updated_by  Int?
-
   @@index([grade_id], map: "grade_id")
 }
 
@@ -841,7 +825,6 @@ model standards_standards_mapping {
   updated_at   DateTime? @db.DateTime(0)
   created_by   Int?
   updated_by   Int?
-
   @@unique([standard1_id, standard2_id], map: "standards")
   @@index([standard1_id], map: "standard1_id")
   @@index([standard2_id], map: "standard2_id")
@@ -853,7 +836,6 @@ model taggings {
   taggable_id   Int?
   taggable_type String?   @db.VarChar(255)
   created_at    DateTime? @db.DateTime(0)
-
   @@index([tag_id], map: "index_taggings_on_tag_id")
   @@index([taggable_id, taggable_type], map: "index_taggings_on_taggable_id_and_taggable_type")
 }
@@ -877,8 +859,7 @@ model temp {
 }
 
 model temp2 {
-  id Int @id @default(0) // ���� @id ���
-  // @@ignore <-- ����� ��
+  id Int @id @default(0) 
 }
 
 model template_categories {
@@ -891,12 +872,11 @@ model template_categories {
   updated_at  DateTime? @db.DateTime(0)
   created_by  Int?
   updated_by  Int?
-
   @@index([project_id], map: "project_id")
 }
 
 model template_temp {
-  screen_id     String  @id @db.VarChar(255) // ������� ��� �����
+  screen_id     String  @id @db.VarChar(255)
   screen_name   String? @db.VarChar(255)
   category_id   String? @db.VarChar(255)
   category_name String? @db.VarChar(255)
@@ -954,7 +934,7 @@ model tools {
 }
 
 model tts_sequence {
-  id Int @id // ���� @id ���
+  id Int @id 
 }
 
 model units {
@@ -970,7 +950,6 @@ model units {
   updated_at  DateTime? @db.DateTime(0)
   created_by  Int?
   updated_by  Int?
-
   @@unique([project_id, exuid], map: "exuid")
   @@index([project_id], map: "project_id")
 }

@@ -1,15 +1,13 @@
-﻿import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 
-const prisma = new PrismaClient();
-
-// Helper: Calculate next version number (Replica of next_version_number in Ruby)
+// Helper: Calculate next version number
 export async function getNextVersionNumber(
   table: 'asset_versions' | 'document_versions',
   parentIdField: 'asset_id' | 'document_id',
   parentId: number
 ): Promise<number> {
-  // @ts-ignore: Dynamic table access to avoid strict typing issues during migration
-  const result = await prisma[table].aggregate({
+  // @ts-ignore: Dynamic table access
+  const result = await (prisma as any)[table].aggregate({
     _max: { number: true },
     where: { [parentIdField]: parentId }
   });
